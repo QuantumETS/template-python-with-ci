@@ -16,117 +16,74 @@ Ce template est conçu pour être utilisé comme **template GitHub d'organisatio
 
 - `src/`: code source Python, où se trouve le code d'application.
 - `tests/`: tests unitaires, suivant la convention ["src layout"](https://docs.pytest.org/en/stable/explanation/goodpractices.html#tests-outside-application-code).
+- `pyproject.toml`: configuration du projet, des dépendances et des groupes de développement.
+- `uv.lock`: verrouillage des versions pour des installations reproductibles avec `uv`.
 - `.github/workflows/unit-tests.yml`: exécution automatique des tests sur GitHub Actions.
-- `requirements-test.txt`: dépendances nécessaires aux tests.
-- `requirements-dev.txt`: dépendances pour le développement, outils de qualité statique, etc.
-- `.pre-commit-config.yaml`: configuration des hooks `pre-commit` (Black).
+- `.pre-commit-config.yaml`: configuration des hooks `pre-commit` (Ruff).
 
 L'exemple de code est volontairement minimal (`sum`) pour rester lisible et servir de squelette.
 
 ## Outils et standard d'équipe
 
 - **GitHub Actions** (`.github/workflows/unit-tests.yml`): exécute automatiquement les tests à chaque push/PR pour garantir que tout le monde valide le même niveau de qualité avant fusion.
-- **pytest** (`requirements-test.txt`): framework de tests unitaires, utilisé pour vérifier le comportement du code de manière reproductible entre les membres.
-- **pre-commit** (`requirements-dev.txt` + `.pre-commit-config.yaml`): au moment de commit, l'outil `pre_commit` exécute les hooks configurés, pour garantir que le code respecte les standards de qualité avant même d'être poussé.
-- **Black** (hook via `pre-commit`): formateur de code Python qui impose un style unique conforme au standard [PEP 8](https://www.python.org/dev/peps/pep-0008/), pour éviter les débats de style et garder un code lisible et uniforme. Il existe une extension VSCode pour l'exécuter automatiquement à chaque sauvegarde, vous évitant un échec du pre-commit à cause du formatage.
-- **Séparation des dépendances** (`requirements-test.txt` / `requirements-dev.txt`): distingue les dépendances nécessaires pour exécuter les tests de celles nécessaire pour le développement, en plus d'être distinctes du fichier habituel `requirements.txt` qui pourrait être utilisé pour les dépendances de l'application ou du hackathon.
+- **pytest** (groupe `dev` dans `pyproject.toml`): framework de tests unitaires, utilisé pour vérifier le comportement du code de manière reproductible entre les membres.
+- **pre-commit** (`.pre-commit-config.yaml`): au moment de commit, l'outil `pre-commit` exécute les hooks configurés, pour garantir que le code respecte les standards de qualité avant même d'être poussé.
+- **Ruff** (`pre-commit` + groupe `dev` dans `pyproject.toml`): linter et formateur de code Python qui remplace le duo historique Black/isort dans ce template, pour garder un code lisible et uniforme.
+- **Séparation des dépendances** (`pyproject.toml` + `uv.lock`): distingue les dépendances nécessaires pour exécuter le projet de celles réservées au développement, tout en gardant un verrouillage reproductible des versions.
 
 ## Première configuration
 
 > [!IMPORTANT]
-> Ce template est prévu pour `pip` avec `venv` ou `conda`. Si vous utilisez `uv`, ce template n'est pas approprié.
+> Ce template est prévu pour `uv`. Utilisez `uv sync` pour installer les dépendances et `uv run` pour exécuter les commandes du projet.
 
-### Configuration avec [`venv`](https://docs.python.org/3/library/venv.html#creating-virtual-environments)
-
-<details>
-<summary>Instructions pour venv</summary>
-
-#### 1) Créer et activer l'environnement
-
-Windows (PowerShell):
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-macOS / Linux:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-#### 2) Installer les dépendances
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements-test.txt
-python -m pip install -r requirements-dev.txt
-```
-
-#### 3) Exécuter les tests
-
-```bash
-python -m pytest tests/
-```
-
-#### 4) Installer et lancer les hooks qualité
-
-```bash
-python -m pre_commit install
-python -m pre_commit run --all-files
-```
-
-</details>
-
-### Configuration avec [`conda`](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html)
+### Configuration avec [`uv`](https://docs.astral.sh/uv/)
 
 <details>
-<summary>Instructions pour conda</summary>
+<summary>Instructions pour uv</summary>
 
-#### 1) Créer et activer l'environnement
-
-```bash
-conda create -n mon_environnement python=3.14 -y
-conda activate mon_environnement
-```
-
-#### 2) Installer les dépendances
+#### 1) Installer les dépendances
 
 ```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements-test.txt
-python -m pip install -r requirements-dev.txt
+uv sync --group dev
 ```
 
-#### 3) Exécuter les tests
+#### 2) Exécuter les tests
 
 ```bash
-python -m pytest tests/
+uv run pytest tests/
 ```
 
-#### 4) Installer et lancer les hooks qualité
+#### 3) Lancer les hooks qualité
 
 ```bash
-python -m pre_commit install
-python -m pre_commit run --all-files
+uv tool install pre-commit
+uvx pre-commit install
+uvx pre-commit run --all-files
 ```
+
+#### 4) Lancer le script d'exemple
+
+```bash
+uv run python src/main.py
+```
+
+> [!TIP]
+> Si vous préférez ne pas installer `pre-commit` globalement, vous pouvez remplacer `uvx pre-commit ...` par une commande équivalente dans un environnement où `pre-commit` est déjà installé.
 
 </details>
 
 ## Usage courant
 
 - **Développement**: travaillez dans `src/` pour le code d'application, et dans `tests/` pour les tests unitaires.
-- **Tests**: lancez les tests avec pytest (`python -m pytest tests/`) pour vérifier que votre code fonctionne comme prévu.
-- **Qualité**: les hooks `pre-commit` s'exécutent automatiquement au moment du commit.
+- **Tests**: lancez les tests avec pytest via `uv run pytest tests/` pour vérifier que votre code fonctionne comme prévu.
+- **Qualité**: les hooks `pre-commit` s'exécutent automatiquement au moment du commit, avec Ruff comme formateur et linter.
 - **CI**: à chaque push sur `main` ou `dev`, et à chaque Pull Request, les tests sont exécutés automatiquement sur GitHub Actions pour garantir que le code fusionné passe les tests.
 - **Documentation**: ajoutez des commentaires et des docstrings (Google Style) pour expliquer le fonctionnement de votre code, surtout si vous travaillez en équipe.
 - **Type-hints**: utilisez des annotations de type pour faciliter la lecture par les pairs et l'IA si vous en utilisez.
 
 **Puis-je utiliser uv ?**
 
-Comme `uv` gère l'environnement et les dépendances à l'aide d'un groupe de fichiers de configuration (`uv.lock`, `pyproject.toml`), et que ces fichiers ne sont pas présents dans ce template, il est recommandé d'utiliser `venv` ou `conda`.
+Oui. Ce template est configuré pour `uv` et s'appuie sur `pyproject.toml` ainsi que `uv.lock` pour gérer les dépendances et reproduire les installations.
 
 ## Ressources supplémentaires
 
@@ -134,11 +91,10 @@ Comme `uv` gère l'environnement et les dépendances à l'aide d'un groupe de fi
 
 - [Documentation pytest](https://docs.pytest.org/en/stable/)
 - [Documentation pre-commit](https://pre-commit.com/)
-- [Documentation Black](https://black.readthedocs.io/en/stable/)
-- [Documentation pre-commit Black hook](https://github.com/psf/black-pre-commit-mirror)
+- [Documentation Ruff](https://docs.astral.sh/ruff/)
+- [Documentation pre-commit Ruff hooks](https://github.com/astral-sh/ruff-pre-commit)
 - [PEP 8 - Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/)
 
 ### Gestion d'environnement
 
-- [venv - Python documentation](https://docs.python.org/3/library/venv.html)
-- [conda - Documentation](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html)
+- [uv - Documentation](https://docs.astral.sh/uv/)
