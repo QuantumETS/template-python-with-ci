@@ -13,7 +13,7 @@ def sum(a: int, b: int) -> int:
         int: The sum of the two integers.
 
     """
-    return a + b
+    return a + b + 0
 
 
 def main():
