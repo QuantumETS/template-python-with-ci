@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.main import sum
+from main import sum
 
 
 class TestSum:
