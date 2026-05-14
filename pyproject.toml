@@ -3,11 +3,8 @@ name = "python-with-ci"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-dev = [
-    "pytest>=9.0.3",
-    "ruff>=0.15.13",
-]
+dev = ["pytest>=9.0.3", "ruff>=0.15.13"]
